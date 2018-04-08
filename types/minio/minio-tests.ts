@@ -9,15 +9,14 @@ const minio = new Minio.Client({
     secretKey: 'Go1hhOkXnl',
 });
 
-minio.makeBucket('testBucket', (error: Error|null) => { console.log(error); });
 minio.makeBucket('testBucket', 'ap-southeast-2', (error: Error|null) => { console.log(error); });
-minio.makeBucket('testBucket');
 minio.makeBucket('testBucket', 'eu-west-1');
+minio.makeBucket('testBucket', 'region-not-from-list');
 
 minio.listBuckets((error: Error|null, bucketList: Minio.BucketItemFromList[]) => { console.log(error, bucketList); });
 minio.listBuckets();
 
-minio.bucketExists('testBucket', (error: Error|null) => { console.log(error); });
+minio.bucketExists('testBucket', (error: Error|null, exists: boolean) => { console.log(error, exists); });
 minio.bucketExists('testBucket');
 
 minio.removeBucket('testBucket', (error: Error|null) => { console.log(error); });
@@ -107,8 +106,14 @@ minio.removeAllBucketNotification('testBucket');
 
 minio.listenBucketNotification('testBucket', 'pref_', '_suf', [ Minio.ObjectCreatedAll ]);
 
-minio.getBucketPolicy('testBucket', 'pref_', (error: Error|null, policy: Minio.PolicyValue) => { console.log(error, policy); });
-minio.getBucketPolicy('testBucket', '');
+minio.getBucketPolicy('testBucket', (error: Error|null, policy: string) => { console.log(error, policy); });
+minio.getBucketPolicy('testBucket');
 
-minio.setBucketPolicy('testBucket', '', Minio.Policy.READWRITE, (error: Error|null) => { console.log(error); });
-minio.setBucketPolicy('testBucket', 'pref_', Minio.Policy.WRITEONLY);
+const testPolicy = `{"Version":"2012-10-17","Statement":[{"Action":["s3:GetBucketLocation"],"Effect":"Allow",
+"Principal":{"AWS":["*"]},"Resource":["arn:aws:s3:::bucketName"],"Sid":""},{"Action":["s3:ListBucket"],
+"Condition":{"StringEquals":{"s3:prefix":["foo","prefix/"]}},"Effect":"Allow","Principal":{"AWS":["*"]},
+"Resource":["arn:aws:s3:::bucketName"],"Sid":""},{"Action":["s3:GetObject"],"Effect":"Allow",
+"Principal":{"AWS":["*"]},"Resource":["arn:aws:s3:::bucketName/foo*","arn:aws:s3:::bucketName/prefix/*"],"Sid":""}]}
+`;
+minio.setBucketPolicy('testBucket',  testPolicy, (error: Error|null) => { console.log(error); });
+minio.setBucketPolicy('testBucket', testPolicy);

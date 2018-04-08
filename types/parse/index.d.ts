@@ -1,10 +1,11 @@
-// Type definitions for parse 2.4
-// Project: https://parse.com/
+// Type definitions for parse 1.11.1
+// Project: https://parseplatform.org/
 // Definitions by:  Ullisen Media Group <http://ullisenmedia.com>
 //                  David Poetzsch-Heffter <https://github.com/dpoetzsch>
 //                  Cedric Kemp <https://github.com/jaeggerr>
 //                  Flavio Negrão <https://github.com/flavionegrao>
 //                  Wes Grimes <https://github.com/wesleygrimes>
+//                  Otherwise SAS <https://github.com/owsas>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 // TypeScript Version: 2.4
 
@@ -88,6 +89,7 @@ declare namespace Parse {
         then<U>(resolvedCallback: (...values: T[]) => IPromise<U>, rejectedCallback?: (reason: any) => IPromise<U>): IPromise<U>;
         then<U>(resolvedCallback: (...values: T[]) => U, rejectedCallback?: (reason: any) => IPromise<U>): IPromise<U>;
         then<U>(resolvedCallback: (...values: T[]) => U, rejectedCallback?: (reason: any) => U): IPromise<U>;
+        catch<U>(resolvedCallback: (...values: T[]) => U, rejectedCallback?: (reason: any) => U): IPromise<U>;
     }
 
     class Promise<T> implements IPromise<T> {
@@ -109,6 +111,7 @@ declare namespace Parse {
             rejectedCallback?: (reason: any) => IPromise<U>): IPromise<U>;
         then<U>(resolvedCallback: (...values: T[]) => U,
             rejectedCallback?: (reason: any) => U): IPromise<U>;
+        catch<U>(resolvedCallback: (...values: T[]) => U, rejectedCallback?: (reason: any) => U): IPromise<U>;
     }
 
     interface Pointer {
@@ -377,6 +380,7 @@ declare namespace Parse {
         previousAttributes(): any;
         relation(attr: string): Relation<this, Object>;
         remove(attr: string, item: any): any;
+        revert(): void;
         save(attrs?: { [key: string]: any } | null, options?: Object.SaveOptions): Promise<this>;
         save(key: string, value: any, options?: Object.SaveOptions): Promise<this>;
         save(attrs: object, options?: Object.SaveOptions): Promise<this>;
@@ -606,6 +610,7 @@ declare namespace Parse {
 
         static or<U extends Object>(...var_args: Query<U>[]): Query<U>;
 
+        aggregate(pipeline: Query.AggregationOptions|Query.AggregationOptions[]): Query<T>;
         addAscending(key: string): Query<T>;
         addAscending(key: string[]): Query<T>;
         addDescending(key: string): Query<T>;
@@ -622,6 +627,7 @@ declare namespace Parse {
         doesNotExist(key: string): Query<T>;
         doesNotMatchKeyInQuery<U extends Object>(key: string, queryKey: string, query: Query<U>): Query<T>;
         doesNotMatchQuery<U extends Object>(key: string, query: Query<U>): Query<T>;
+        distinct(key: string): Query<T>;
         each(callback: Function, options?: Query.EachOptions): Promise<void>;
         endsWith(key: string, suffix: string): Query<T>;
         equalTo(key: string, value: any): Query<T>;
@@ -658,6 +664,17 @@ declare namespace Parse {
         interface FindOptions extends SuccessFailureOptions, ScopeOptions { }
         interface FirstOptions extends SuccessFailureOptions, ScopeOptions { }
         interface GetOptions extends SuccessFailureOptions, ScopeOptions { }
+
+        // According to http://docs.parseplatform.org/rest/guide/#aggregate-queries
+        interface AggregationOptions {
+            group?: { objectId?: string, [key:string]: any };
+            match?: {[key: string]: any};
+            project?: {[key: string]: any};
+            limit?: number;
+            skip?: number;
+            // Sort documentation https://docs.mongodb.com/v3.2/reference/operator/aggregation/sort/#pipe._S_sort
+            sort?: {[key: string]: 1|-1};
+        }
     }
 
     /**
@@ -891,7 +908,8 @@ declare namespace Parse {
 
         interface FunctionResponse {
             success: (response: any) => void;
-            error: (response: any) => void;
+            error (code: number, response: any): void;
+            error (response: any): void;
         }
 
         interface Cookie {
@@ -912,7 +930,9 @@ declare namespace Parse {
         interface AfterDeleteRequest extends TriggerRequest { }
         interface BeforeDeleteRequest extends TriggerRequest { }
         interface BeforeDeleteResponse extends FunctionResponse { }
-        interface BeforeSaveRequest extends TriggerRequest { }
+        interface BeforeSaveRequest extends TriggerRequest {
+            original?: Parse.Object;
+        }
         interface BeforeSaveResponse extends FunctionResponse {
             success: () => void;
         }

@@ -1,6 +1,7 @@
-// Type definitions for minio 4.0
+// Type definitions for minio 5.1
 // Project: https://github.com/minio/minio-js#readme
 // Definitions by: Barin Britva <https://github.com/barinbritva>
+//                 Lubomir Kaplan <https://github.com/castorw>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 
 /// <reference types="node" />
@@ -10,8 +11,7 @@ import { Stream } from 'stream';
 import EventEmitter = NodeJS.EventEmitter;
 
 // Exports only from typings
-export type Region = 'us-east-1'|'us-west-1'|'us-west-2'|'eu-west-1'|'eu-central-1'|'ap-southeast-1'|'ap-northeast-1'|'ap-southeast-2'|'sa-east-1'|'cn-north-1';
-export type PolicyValue = 'none'|'readonly'|'writeonly'|'readwrite';
+export type Region = 'us-east-1'|'us-west-1'|'us-west-2'|'eu-west-1'|'eu-central-1'|'ap-southeast-1'|'ap-northeast-1'|'ap-southeast-2'|'sa-east-1'|'cn-north-1'|string;
 export type NoResultCallback = (error: Error|null) => void;
 export type ResultCallback<T> = (error: Error|null, result: T) => void;
 
@@ -46,8 +46,7 @@ export interface BucketItemStat {
     size: number;
     contentType: string;
     etag: string;
-    // In documentation in this case string. Is it doc error?
-    lastModified: Date|string;
+    lastModified: Date;
 }
 
 export interface IncompleteUploadedBucketItem {
@@ -80,16 +79,14 @@ export class Client {
     constructor(options: ClientOptions);
 
     // Bucket operations
-    makeBucket(bucketName: string, callback: NoResultCallback): void;
     makeBucket(bucketName: string, region: Region, callback: NoResultCallback): void;
-    makeBucket(bucketName: string, region?: Region): Promise<void>;
+    makeBucket(bucketName: string, region: Region): Promise<void>;
 
     listBuckets(callback: ResultCallback<BucketItemFromList[]>): void;
-    listBuckets(): Promise<BucketItemFromList>;
+    listBuckets(): Promise<BucketItemFromList[]>;
 
-    // Doc contains error - no boolean value in result
-    bucketExists(bucketName: string, callback: NoResultCallback): void;
-    bucketExists(bucketName: string): Promise<void>;
+    bucketExists(bucketName: string, callback: ResultCallback<boolean>): void;
+    bucketExists(bucketName: string): Promise<boolean>;
 
     removeBucket(bucketName: string, callback: NoResultCallback): void;
     removeBucket(bucketName: string): Promise<void>;
@@ -161,11 +158,11 @@ export class Client {
     // todo #low Specify events
     listenBucketNotification(bucketName: string, prefix: string, suffix: string, events: string[]): EventEmitter;
 
-    getBucketPolicy(bucketName: string, objectPrefix: string, callback: ResultCallback<PolicyValue>): void;
-    getBucketPolicy(bucketName: string, objectPrefix: string): Promise<PolicyValue>;
+    getBucketPolicy(bucketName: string, callback: ResultCallback<string>): void;
+    getBucketPolicy(bucketName: string): Promise<string>;
 
-    setBucketPolicy(bucketName: string, objectPrefix: string, bucketPolice: PolicyValue, callback: NoResultCallback): void;
-    setBucketPolicy(bucketName: string, objectPrefix: string, bucketPolice: PolicyValue): Promise<void>;
+    setBucketPolicy(bucketName: string, bucketPolicy: string, callback: NoResultCallback): void;
+    setBucketPolicy(bucketName: string, bucketPolicy: string): Promise<void>;
 
     // Other
     newPostPolicy(): PostPolicy;

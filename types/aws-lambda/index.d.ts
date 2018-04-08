@@ -15,6 +15,8 @@
 //                 Palmi Valgeirsson <https://github.com/palmithor>
 //                 Danilo Raisi <https://github.com/daniloraisi>
 //                 Simon Buchan <https://github.com/simonbuchan>
+//                 David Hayden <https://github.com/Haydabase>
+//                 Chris Redekop <https://github.com/repl-chris>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 // TypeScript Version: 2.3
 
@@ -89,7 +91,7 @@ export interface AttributeValue {
 // Context
 // http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_streams_StreamRecord.html
 export interface StreamRecord {
-    ApproximateCreationTime?: number;
+    ApproximateCreationDateTime?: number;
     Keys?: { [key: string]: AttributeValue };
     NewImage?: { [key: string]: AttributeValue };
     OldImage?: { [key: string]: AttributeValue };
@@ -516,7 +518,7 @@ export interface CloudFrontResponseEvent {
     }>;
 }
 
-export type CloudFrontRequestResult = undefined | null | CloudFrontResultResponse;
+export type CloudFrontRequestResult = undefined | null | CloudFrontResultResponse | CloudFrontRequest;
 
 export interface CloudFrontRequestEvent {
     Records: Array<{
@@ -527,6 +529,31 @@ export interface CloudFrontRequestEvent {
 }
 
 export type CloudFrontResponseResult = undefined | null | CloudFrontResultResponse;
+
+// Kinesis Streams
+// https://docs.aws.amazon.com/lambda/latest/dg/eventsources.html#eventsources-kinesis-streams
+export interface KinesisStreamRecordPayload {
+    approximateArrivalTimestamp: number;
+    data: string;
+    kinesisSchemaVersion: string;
+    partitionKey: string;
+    sequenceNumber: string;
+}
+
+export interface KinesisStreamRecord {
+    awsRegion: string;
+    eventID: string;
+    eventName: string;
+    eventSource: string;
+    eventSourceARN: string;
+    eventVersion: string;
+    invokeIdentityArn: string;
+    kinesis: KinesisStreamRecordPayload;
+}
+
+export interface KinesisStreamEvent {
+    Records: KinesisStreamRecord[];
+}
 
 /**
  * AWS Lambda handler function.
@@ -594,7 +621,9 @@ export type CloudFrontRequestCallback = Callback<CloudFrontRequestResult>;
 export type CloudFrontResponseHandler = Handler<CloudFrontResponseEvent, CloudFrontResponseResult>;
 export type CloudFrontResponseCallback = Callback<CloudFrontResponseResult>;
 
-// TODO: Kinesis (should be very close to DynamoDB stream?)
+export type KinesisStreamHandler = Handler<KinesisStreamEvent, void>;
+
+// TODO: Kinesis Firehose
 
 export type CustomAuthorizerHandler = Handler<CustomAuthorizerEvent, CustomAuthorizerResult>;
 export type CustomAuthorizerCallback = Callback<CustomAuthorizerResult>;
